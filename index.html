@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>繽紛花園時鐘</title>
+    <style>
+        /* 重置預設邊距並設定全螢幕 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* 繽紛花園的高畫質背景圖片 */
+            background-image: url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 時鐘本體：採用毛玻璃半透明特效 */
+        .clock {
+            width: 320px;
+            height: 320px;
+            background: rgba(255, 255, 255, 0.25); /* 半透明白色 */
+            backdrop-filter: blur(12px); /* 背景模糊效果 */
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.5); /* 淡淡的白色邊框 */
+            border-radius: 50%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 時鐘中心的圓點 */
+        .center-dot {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 4px solid #ff4757; /* 中心點搭配秒針的顏色 */
+            border-radius: 50%;
+            z-index: 20;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* 指針的共用設定 */
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom; /* 讓旋轉軸心在指針底部 */
+            border-radius: 10px;
+            z-index: 10;
+        }
+
+        /* 時針 */
+        .hour-hand {
+            width: 8px;
+            height: 80px;
+            background: #2f3542;
+            margin-left: -4px; /* 寬度的一半，確保置中 */
+        }
+
+        /* 分針 */
+        .minute-hand {
+            width: 6px;
+            height: 115px;
+            background: #57606f;
+            margin-left: -3px;
+        }
+
+        /* 秒針 */
+        .second-hand {
+            width: 2px;
+            height: 135px;
+            background: #ff4757; /* 鮮艷的紅色 */
+            margin-left: -1px;
+            z-index: 15;
+        }
+
+        /* 時鐘數字的容器 */
+        .number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            padding-top: 15px; /* 決定數字距離邊緣的距離 */
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0px 2px 5px rgba(0,0,0,0.6); /* 增加陰影讓數字在繽紛背景下也能看清 */
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clock" id="clock">
+        <!-- 這裡放時針、分針、秒針與中心點 -->
+        <div class="hand hour-hand" id="hour"></div>
+        <div class="hand minute-hand" id="minute"></div>
+        <div class="hand second-hand" id="second"></div>
+        <div class="center-dot"></div>
+    </div>
+
+    <script>
+        // 1. 動態生成時鐘的 1 到 12 數字
+        const clock = document.getElementById('clock');
+        for (let i = 1; i <= 12; i++) {
+            // 創建數字外層容器 (用來控制旋轉角度)
+            const numContainer = document.createElement('div');
+            numContainer.className = 'number';
+            numContainer.style.transform = `rotate(${i * 30}deg)`; // 每個數字相隔 30 度
+            
+            // 創建數字本身 (把字體轉正)
+            const numElement = document.createElement('div');
+            numElement.innerText = i;
+            numElement.style.transform = `rotate(${-i * 30}deg)`; // 抵銷外層的旋轉，讓數字保持正立
+            
+            numContainer.appendChild(numElement);
+            clock.appendChild(numContainer);
+        }
+
+        // 2. 控制時鐘指針轉動的邏輯
+        const hourHand = document.getElementById('hour');
+        const minuteHand = document.getElementById('minute');
+        const secondHand = document.getElementById('second');
+
+        function updateClock() {
+            const now = new Date(); // 取得當前真實時間
+
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+
+            // 計算旋轉角度
+            const secondsDegrees = (seconds / 60) * 360;
+            // 分針除了看「分」，還要加上「秒」造成的微小偏移，這樣才會滑順
+            const minutesDegrees = ((minutes / 60) * 360) + ((seconds / 60) * 6);
+            // 時針除了看「小時」，也要加上「分」造成的微小偏移
+            const hoursDegrees = ((hours / 12) * 360) + ((minutes / 60) * 30);
+
+            // 套用角度到 CSS 的 transform 屬性
+            secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
+            minuteHand.style.transform = `rotate(${minutesDegrees}deg)`;
+            hourHand.style.transform = `rotate(${hoursDegrees}deg)`;
+        }
+
+        // 每秒 (1000毫秒) 執行一次 updateClock 函數
+        setInterval(updateClock, 1000);
+        
+        // 網頁載入時先立刻執行一次，避免剛開始出現所有指針都停在 12 點的狀況
+        updateClock();
+    </script>
+</body>
+</html>
